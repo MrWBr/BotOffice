@@ -1,7 +1,7 @@
 # BotOffice
 A little tiny office for SAP bots
 
-Folder structure
+Folder structure 
 
 C:\BotOffice\
 ├── bot_office.html          ← Este arquivo (só HTML + CSS + imports)

@@ -1,0 +1,118 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>🏢 Bot Office — Habbo Style</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#3b5998;overflow:hidden;font-family:"Arial",sans-serif;height:100vh;user-select:none}
+#vp{position:absolute;top:0;left:0;right:0;bottom:0;overflow:hidden;
+  background:linear-gradient(180deg,#2c3e6b 0%,#3b5998 50%,#2c3e6b 100%)}
+#topbar{position:fixed;top:0;left:0;right:0;height:34px;
+  background:linear-gradient(180deg,#1a2744,#0d1a33);border-bottom:2px solid #4a6fa5;
+  display:flex;align-items:center;padding:0 10px;z-index:600;gap:8px}
+.rn{color:#fff;font-size:12px;font-weight:bold;letter-spacing:.5px}
+.ri{color:#8aa4cc;font-size:9px}
+.tb-sep{width:1px;height:18px;background:#2a3f66;margin:0 4px}
+.tb-btn{display:flex;align-items:center;gap:3px;padding:3px 10px;border-radius:4px;border:1px solid;
+  font-size:9px;font-weight:700;cursor:pointer;background:transparent;font-family:inherit;transition:all .15s}
+.tb-btn:hover{transform:scale(1.05);filter:brightness(1.2)}
+.tb-go{border-color:#4ecca3;color:#4ecca3}
+.tb-st{border-color:#e94560;color:#e94560}
+.tb-cfg{border-color:#f0c040;color:#f0c040}
+.tb-pills{display:flex;gap:6px;margin-left:auto}
+.pill{padding:2px 8px;border-radius:10px;font-size:8px;font-weight:600;background:rgba(255,255,255,.04)}
+.pill-a{color:#4ecca3;border:1px solid #4ecca340}
+.pill-i{color:#f0c040;border:1px solid #f0c04040}
+.pill-e{color:#e94560;border:1px solid #e9456040}
+.zb{background:transparent;border:1px solid #4a6fa5;color:#8aa4cc;padding:2px 7px;border-radius:3px;
+  cursor:pointer;font-size:10px;font-weight:bold;font-family:monospace}
+.zl{color:#4a6fa5;font-size:8px;font-family:monospace;min-width:28px;text-align:center}
+.clk{color:#8aa4cc;font-size:10px;font-family:monospace;margin-left:4px}
+#panel{position:fixed;right:0;top:34px;bottom:0;width:200px;
+  background:linear-gradient(180deg,#1a2744,#0d1a33);border-left:2px solid #4a6fa5;
+  z-index:500;display:flex;flex-direction:column}
+.ph{padding:5px 8px;border-bottom:1px solid #2a3f66;color:#8aa4cc;font-size:8px;
+  font-weight:bold;letter-spacing:1px;text-transform:uppercase}
+.pb{flex:1;overflow-y:auto;padding:4px}
+.pe{padding:3px 6px;margin-bottom:2px;border-radius:3px;font-size:8px;color:#ccc;
+  background:rgba(255,255,255,.03);border-left:3px solid #4a6fa5;animation:li .3s}
+.pe.ok{border-left-color:#4ecca3;color:#a0e8d0}
+.pe.err{border-left-color:#e94560;color:#f0a0a0}
+.pe.soc{border-left-color:#f0c040;color:#f0dca0}
+@keyframes li{from{opacity:0;transform:translateX(8px)}to{opacity:1;transform:translateX(0)}}
+.pt{color:#4a6fa5;font-family:monospace;margin-right:3px;font-size:7px}
+.ps{font-weight:bold;margin-right:3px}
+.modal-bg{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:800;
+  display:none;align-items:center;justify-content:center}
+.modal-bg.vis{display:flex}
+.modal{background:#1a2744;border:2px solid #4a6fa5;border-radius:8px;padding:16px;
+  width:380px;max-height:80vh;overflow-y:auto}
+.modal h3{color:#fff;font-size:13px;margin-bottom:10px;border-bottom:1px solid #2a3f66;padding-bottom:6px}
+.modal .row{display:flex;gap:8px;align-items:center;padding:5px 0;border-bottom:1px solid #0d1a3380}
+.modal .bot-em{font-size:14px;width:24px;text-align:center}
+.modal .bot-nm{color:#fff;font-size:10px;font-weight:bold;flex:1}
+.modal select{background:#0d1a33;border:1px solid #2a3f66;color:#fff;padding:3px 6px;
+  border-radius:3px;font-size:9px;width:80px}
+.modal .close-btn{margin-top:10px;width:100%;padding:6px;background:#4a6fa5;color:#fff;
+  border:none;border-radius:4px;cursor:pointer;font-weight:bold;font-size:10px}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:#2a3f66;border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <span class="rn">🏢 Bot Office</span>
+  <span class="ri">Utilidades</span>
+  <div class="tb-sep"></div>
+  <button class="tb-btn tb-go" onclick="STATE.running=true">▶ Start</button>
+  <button class="tb-btn tb-st" onclick="STATE.running=false">■ Stop</button>
+  <button class="tb-btn tb-cfg" onclick="openCfg()">⚙ Config</button>
+  <div class="tb-sep"></div>
+  <button class="zb" onclick="zm(-0.1)">−</button>
+  <span class="zl" id="zLbl">135%</span>
+  <button class="zb" onclick="zm(0.1)">+</button>
+  <div class="tb-pills">
+    <span class="pill pill-a" id="st-a">● 0 ativos</span>
+    <span class="pill pill-i" id="st-i">● 0 ociosos</span>
+    <span class="pill pill-e" id="st-e">● 0 erros</span>
+  </div>
+  <span class="clk" id="clk">--:--</span>
+</div>
+
+<!-- CONFIG MODAL -->
+<div class="modal-bg" id="cfgM">
+  <div class="modal">
+    <h3>⚙ Configuração dos Bots</h3>
+    <div id="cfgL"></div>
+    <button class="close-btn" onclick="closeCfg()">Fechar</button>
+  </div>
+</div>
+
+<!-- LOG PANEL -->
+<div id="panel">
+  <div class="ph">💬 Atividade</div>
+  <div class="pb" id="logP"></div>
+</div>
+
+<!-- CANVAS -->
+<div id="vp">
+  <canvas id="cv" style="position:absolute"></canvas>
+</div>
+
+<!-- JS MODULES (ordem importa!) -->
+<script src="js/config.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/furniture.js"></script>
+<script src="js/screens.js"></script>
+<script src="js/character.js"></script>
+<script src="js/walk.js"></script>
+<script src="js/simulation.js"></script>
+<script src="js/ui.js"></script>
+
+</body>
+</html>
+

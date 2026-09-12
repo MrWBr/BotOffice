@@ -52,7 +52,19 @@ var CFG = {
     'Verificando...','Sistemas online 🟢','Checando SAP...'
   ]
 };
-
+CFG.VOICE = {
+  perfeccionista: {
+    work: ['Revisando cada campo antes de confirmar...', 'Vou checar duas vezes isso aqui.'],
+    error_baixa_paciencia: ['Isso de novo?? Vou refazer com calma.', 'Ok, respira. Tentando de novo, com atenção.'],
+    idle: ['Tudo certinho por aqui.', 'Aguardando, mas de olho.']
+  },
+  workaholic: {
+    work: ['Bora, mais uma!', 'Sem parar hoje 💪'],
+    error_baixa_paciencia: ['Argh, trava besta. De novo.', 'Não vai me segurar, não.'],
+    idle: ['Já? Quero mais tarefa.']
+  }
+  // ... resto das personalidades do config.js
+};
 // ============================================================
 // BOTS — Cada bot com suas macros reais do PlanejamentoUTL
 // ============================================================
@@ -159,4 +171,10 @@ var STATE = {
   copaOcc: [],
   meetOcc: []
 };
-
+function pickPhrase(bot, category){
+  var mood = bot.mood;
+  var key = category;
+  if(category === 'error' && mood.paciencia < 0.35) key = 'error_baixa_paciencia';
+  var bank = (CFG.VOICE[bot.personality] || {})[key] || CFG.PHRASES[category] || ['...'];
+  return bank[rn(bank.length)];
+}

@@ -65,6 +65,7 @@ var BOTS = [
     hidden:false, act:null, _w:null,
     personality:'diligente',
     macros:['Abrir_Sap','SapKeeper']
+    mood: { paciencia: 0.7, confianca: 0.6, carga: 0.3 }
   },
   {
     id:'b1', name:'Harvester', emoji:'🌾',
@@ -74,6 +75,7 @@ var BOTS = [
     hidden:false, act:null, _w:null,
     personality:'workaholic',
     macros:['Ordens','Bancodedados_IP24','ATTiw29_MM','ATTip24','Att_Iw49','ATUALIZAR_IW38','Quebras','suborder']
+    mood: { paciencia: 0.7, confianca: 0.6, carga: 0.3 }
   },
   {
     id:'b2', name:'Planner', emoji:'📋',
@@ -92,6 +94,7 @@ var BOTS = [
     hidden:false, act:null, _w:null,
     personality:'organizado',
     macros:['DistribuicaoOrdens']
+    mood: { paciencia: 0.7, confianca: 0.6, carga: 0.3 }
   },
   {
     id:'b4', name:'Checker', emoji:'✅',
@@ -101,6 +104,7 @@ var BOTS = [
     hidden:false, act:null, _w:null,
     personality:'perfeccionista',
     macros:['AnaliseCheck','CorrigirCheck']
+    mood: { paciencia: 0.7, confianca: 0.6, carga: 0.3 }
   },
   {
     id:'b5', name:'Labels', emoji:'🏷',
@@ -110,6 +114,7 @@ var BOTS = [
     hidden:false, act:null, _w:null,
     personality:'atento',
     macros:['ATT_EtiquetasDiario','etqiw49']
+    mood: { paciencia: 0.7, confianca: 0.6, carga: 0.3 }
   },
   {
     id:'b6', name:'Mailer', emoji:'📧',
@@ -119,6 +124,7 @@ var BOTS = [
     hidden:false, act:null, _w:null,
     personality:'comunicativo',
     macros:['Etiquetas_email','EtiquetasSemRetorno_email','EnviarEmail_ordensativas','EnviarEmail_horas','RotasAtrasadas','Emails_dinamicos','ProgramacaoEmail']
+    mood: { paciencia: 0.7, confianca: 0.6, carga: 0.3 }
   },
   {
     id:'b7', name:'Reporter', emoji:'📊',
@@ -128,6 +134,7 @@ var BOTS = [
     hidden:false, act:null, _w:null,
     personality:'analítico',
     macros:['lancamentohoras']
+    mood: { paciencia: 0.7, confianca: 0.6, carga: 0.3 }
   },
   {
     id:'op', name:'Operador', emoji:'👨‍💼',
@@ -137,6 +144,7 @@ var BOTS = [
     hidden:false, act:null, _w:null,
     personality:'supervisor',
     macros:[]
+    mood: { paciencia: 0.7, confianca: 0.6, carga: 0.3 }
   }
 ];
 

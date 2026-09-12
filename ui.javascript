@@ -82,8 +82,37 @@ function initOffice(){
     addLog(b.name, m[0], m[1]);
   }, 3000);
 
-  addLog('Sistema', '🏢 Bot Office Habbo iniciado!', 'ok');
+  addLog('Sistema', '🏢 Bot Office iniciado!', 'ok');
 }
+
+var lastKnown = {}; // {b0: {state, msg}, ...}
+
+function pollBotStatus(){
+  fetch('bot_status.json?_=' + Date.now())
+    .then(r => r.json())
+    .then(data => {
+      BOTS.forEach(function(bot){
+        var d = data[bot.id];
+        if(!d) return;
+        var prev = lastKnown[bot.id] || {};
+        if(d.state !== prev.state || d.msg !== prev.msg){
+          updateMood(bot, prev.state, d.state);
+          var frase = pickPhrase(bot, d.state); // 'work' | 'idle' | 'error'
+          bot.state = d.state;
+          bot.bub = frase;
+          bot.bubT = 80;
+          pushFeed(bot, d.state, frase);
+          lastKnown[bot.id] = { state: d.state, msg: d.msg };
+        }
+      });
+    })
+    .catch(function(){}); // arquivo pode estar sendo escrito nesse instante
+}
+
+function pushFeed(bot, tipo, texto){
+  addLog(bot.name, texto, tipo === 'error' ? 'err' : tipo === 'work' ? 'ok' : 'soc');
+}
+setInterval(pollBotStatus, 2000);
 
 // Start!
 initOffice();

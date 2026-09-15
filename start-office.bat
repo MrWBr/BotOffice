@@ -3,7 +3,7 @@ title Bot Office - PlanejamentoUTL
 color 0B
 echo.
 echo   ========================================
-echo     Bot Office Server v3
+echo     Bot Office Server v3 (Blindado)
 echo   ========================================
 echo.
 echo   URL:  http://localhost:8080
@@ -13,11 +13,15 @@ echo.
 
 if not exist "C:\BotOffice" mkdir "C:\BotOffice"
 
+:: --- Limpa eventuais instâncias travadas do powershell anterior ---
+taskkill /f /im powershell.exe >nul 2>&1
+timeout /t 1 >nul
+
 :: --- Abre o Chrome com o sistema E a planilha online (em abas separadas) ---
-start chrome "http://localhost:8080" "https://google.com"
+start chrome "http://localhost:8080"
 
 :: --- SE FOR PLANILHA LOCAL (EXCEL), DESCOMENTE A LINHA ABAIXO REMOVENDO OS DOIS PONTOS (::) ---
-:: start "" "C:\BotOffice\seu_arquivo.xlsx"
+  :: start "" "C:\BotOffice\PlanejamentoUTL.xlsm"
 
 powershell -ExecutionPolicy Bypass -Command ^
   "$p=8080; $r='C:\BotOffice'; " ^
@@ -33,7 +37,8 @@ powershell -ExecutionPolicy Bypass -Command ^
   "  $s.Headers.Add('Cache-Control','no-cache,no-store'); " ^
   "  if($q.HttpMethod -eq 'POST'){ " ^
   "    $sr=New-Object IO.StreamReader($q.InputStream); $body=$sr.ReadToEnd(); $sr.Close(); " ^
-  "    [IO.File]::WriteAllText($f,$body,[Text.Encoding]::UTF8); " ^
+  "    $fs=New-Object IO.FileStream($f,[IO.FileMode]::Create,[IO.FileAccess]::Write,[IO.FileShare]::ReadWrite); " ^
+  "    $sw=New-Object IO.StreamWriter($fs,[Text.Encoding]::UTF8); $sw.Write($body); $sw.Close(); $fs.Close(); " ^
   "    $b=[Text.Encoding]::UTF8.GetBytes('OK'); " ^
   "    $s.ContentLength64=$b.Length; $s.OutputStream.Write($b,0,$b.Length); " ^
   "    Write-Host ('  ['+$(Get-Date -F 'HH:mm:ss')+'] POST '+$u) -F Cyan; " ^

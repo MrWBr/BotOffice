@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>🏢 Bot Office</title>
+<title>🏢 Bot Office — Neural Monitor Edition</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#3b5998;overflow:hidden;font-family:"Arial",sans-serif;height:100vh;user-select:none}
@@ -29,9 +29,38 @@ body{background:#3b5998;overflow:hidden;font-family:"Arial",sans-serif;height:10
   cursor:pointer;font-size:10px;font-weight:bold;font-family:monospace}
 .zl{color:#4a6fa5;font-size:8px;font-family:monospace;min-width:28px;text-align:center}
 .clk{color:#8aa4cc;font-size:10px;font-family:monospace;margin-left:4px}
+
+/* PAINEL DE LOGS (DIREITA) */
 #panel{position:fixed;right:0;top:34px;bottom:0;width:200px;
   background:linear-gradient(180deg,#1a2744,#0d1a33);border-left:2px solid #4a6fa5;
   z-index:500;display:flex;flex-direction:column}
+
+/* PAINEL DO CÉREBRO NEURAL RECOLHÍVEL (ESQUERDA) */
+#brain-panel{position:fixed;left:0;top:34px;bottom:0;width:220px;
+  background:linear-gradient(180deg,#1a2744,#0d1a33);border-right:2px solid #4a6fa5;
+  z-index:500;display:flex;flex-direction:column;
+  transition:transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)}
+#brain-panel.collapsed{transform:translateX(-100%)}
+
+/* BOTÃO DE RECOLHER/EXPANDIR A BARRA */
+.brain-toggle-btn{position:absolute;right:-25px;top:10px;width:25px;height:36px;
+  background:#1a2744;border:1px solid #4a6fa5;border-left:none;border-radius:0 6px 6px 0;
+  color:#38bdf8;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:bold;box-shadow:3px 0 8px rgba(0,0,0,0.3);transition:background 0.2s}
+.brain-toggle-btn:hover{background:#2a3f66;color:#fff}
+
+.brain-select{background:#0d1a33;border:1px solid #2a3f66;color:#38bdf8;
+  padding:4px 6px;border-radius:4px;font-size:10px;font-weight:bold;
+  width:100%;margin-top:4px;cursor:pointer;outline:none}
+.brain-metric{margin-bottom:8px}
+.brain-label{display:flex;justify-content:space-between;font-size:8px;color:#8aa4cc;margin-bottom:2px;font-family:monospace}
+.brain-bar-bg{height:7px;background:#091224;border-radius:3px;overflow:hidden;border:1px solid #2a3f66}
+.brain-bar-fill{height:100%;transition:width 0.2s ease-in-out}
+.fill-work{background:#4ecca3}
+.fill-pausa{background:#f0c040}
+.fill-chat{background:#a855f7}
+.fill-stress{background:#e94560}
+
 .ph{padding:5px 8px;border-bottom:1px solid #2a3f66;color:#8aa4cc;font-size:8px;
   font-weight:bold;letter-spacing:1px;text-transform:uppercase}
 .pb{flex:1;overflow-y:auto;padding:4px}
@@ -43,6 +72,7 @@ body{background:#3b5998;overflow:hidden;font-family:"Arial",sans-serif;height:10
 @keyframes li{from{opacity:0;transform:translateX(8px)}to{opacity:1;transform:translateX(0)}}
 .pt{color:#4a6fa5;font-family:monospace;margin-right:3px;font-size:7px}
 .ps{font-weight:bold;margin-right:3px}
+
 .modal-bg{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:800;
   display:none;align-items:center;justify-content:center}
 .modal-bg.vis{display:flex}
@@ -113,7 +143,34 @@ body{background:#3b5998;overflow:hidden;font-family:"Arial",sans-serif;height:10
   </div>
 </div>
 
-<!-- LOG PANEL -->
+<!-- MONITOR NEURAL RECOLHÍVEL (ESQUERDA) -->
+<div id="brain-panel">
+  <!-- Botão de alternância da aba -->
+  <button class="brain-toggle-btn" onclick="toggleBrainPanel()" title="Recolher/Expandir Monitor Neural">
+    <span id="brain-toggle-icon">◀</span>
+  </button>
+
+  <div class="ph">🧠 Monitor Neural</div>
+  <div class="pb" style="padding: 8px; display: flex; flex-direction: column; gap: 8px;">
+    <div>
+      <label class="ri" style="display:block; margin-bottom:2px;">BOT EM OBSERVAÇÃO:</label>
+      <select id="brain-bot-select" class="brain-select" onchange="window.botInspecionadoId = this.value">
+        <!-- Opções preenchidas via JavaScript -->
+      </select>
+    </div>
+
+    <!-- CANVAS DA ANIMAÇÃO DO CÉREBRO -->
+    <div style="background:#091224; border:1px solid #2a3f66; border-radius:4px; padding:4px; text-align:center;">
+      <canvas id="brain-canvas" width="200" height="90" style="display:block; margin:0 auto;"></canvas>
+    </div>
+
+    <div id="brain-metrics-content">
+      <!-- Telemetria dos vetores em tempo real -->
+    </div>
+  </div>
+</div>
+
+<!-- LOG PANEL (DIREITA) -->
 <div id="panel">
   <div class="ph">💬 Atividade</div>
   <div class="pb" id="logP"></div>
@@ -136,7 +193,209 @@ body{background:#3b5998;overflow:hidden;font-family:"Arial",sans-serif;height:10
 <script src="js/ui.js"></script>
 
 <script>
-  // Cálculo de tempo de casa baseado no relógio simulado
+  window.botInspecionadoId = null;
+
+  // Alterna visibilidade da barra neural
+  function toggleBrainPanel() {
+    var panel = document.getElementById('brain-panel');
+    var icon = document.getElementById('brain-toggle-icon');
+    panel.classList.toggle('collapsed');
+    icon.textContent = panel.classList.contains('collapsed') ? '▶' : '◀';
+  }
+
+  // Atualização em Tempo Real do Monitor Neural
+ function atualizarPainelCerebro() {
+    if (typeof BOTS === 'undefined' || !BOTS.length) return;
+
+    var select = document.getElementById('brain-bot-select');
+    var content = document.getElementById('brain-metrics-content');
+    if (!select || !content) return;
+
+    var botsValidos = BOTS.filter(function(b){ return b && !b.hidden && b.state !== 'fired'; });
+    
+    if (select.children.length !== botsValidos.length) {
+      select.innerHTML = '';
+      botsValidos.forEach(function(b) {
+        var opt = document.createElement('option');
+        opt.value = b.id;
+        opt.textContent = (b.emoji || '🤖') + ' ' + b.name;
+        select.appendChild(opt);
+      });
+      if (!window.botInspecionadoId && botsValidos.length > 0) {
+        window.botInspecionadoId = botsValidos[0].id;
+      }
+    }
+
+    if (window.botInspecionadoId) {
+      select.value = window.botInspecionadoId;
+    }
+
+    var bot = BOTS.find(function(b){ return b.id === window.botInspecionadoId; }) || botsValidos[0];
+    if (!bot) return;
+
+    // 🛡️ BLINDAGEM TOTAL: Garante que NADA venha como undefined
+    var brain = bot._brain || {};
+    var scoreTrab = brain.scoreTrabalhar !== undefined ? brain.scoreTrabalhar : "0.00";
+    var scorePausa = brain.scorePausar !== undefined ? brain.scorePausar : "0.00";
+    var scoreSoc = brain.scoreSocializar !== undefined ? brain.scoreSocializar : "0.00";
+    var decisaoTexto = brain.decisao !== undefined ? brain.decisao : "OCIOSO";
+
+    var estresseReal = (bot.stress !== undefined) ? Math.round(bot.stress) : (brain.stress !== undefined ? brain.stress : 0);
+    var energiaReal = (bot.energy !== undefined) ? Math.round(bot.energy) : (brain.energy !== undefined ? brain.energy : 100);
+
+    content.innerHTML = `
+      <div style="font-size:9px; color:#38bdf8; font-weight:bold; margin-bottom:8px; border-bottom:1px solid #2a3f66; padding-bottom:4px;">
+        Perfil: <span style="color:#fff">${(bot.personality || 'diligente').toUpperCase()}</span>
+      </div>
+
+      <div class="brain-metric">
+        <div class="brain-label"><span>Desejo Trabalhar</span><span>${scoreTrab}</span></div>
+        <div class="brain-bar-bg"><div class="brain-bar-fill fill-work" style="width:${Math.min(100, parseFloat(scoreTrab)*50)}%"></div></div>
+      </div>
+
+      <div class="brain-metric">
+        <div class="brain-label"><span>Desejo Pausa / Café</span><span>${scorePausa}</span></div>
+        <div class="brain-bar-bg"><div class="brain-bar-fill fill-pausa" style="width:${Math.min(100, parseFloat(scorePausa)*50)}%"></div></div>
+      </div>
+
+      <div class="brain-metric">
+        <div class="brain-label"><span>Desejo Socializar</span><span>${scoreSoc}</span></div>
+        <div class="brain-bar-bg"><div class="brain-bar-fill fill-chat" style="width:${Math.min(100, parseFloat(scoreSoc)*50)}%"></div></div>
+      </div>
+
+      <hr style="border:none; border-top:1px dashed #2a3f66; margin:10px 0;">
+
+      <div class="brain-metric">
+        <div class="brain-label"><span>Nível de Estresse</span><span>${estresseReal}%</span></div>
+        <div class="brain-bar-bg"><div class="brain-bar-fill fill-stress" style="width:${estresseReal}%"></div></div>
+      </div>
+
+      <div class="brain-metric">
+        <div class="brain-label"><span style="color:#4ecca3">Nível de Energia</span><span style="color:#4ecca3">${energiaReal}%</span></div>
+        <div class="brain-bar-bg"><div class="brain-bar-fill fill-work" style="width:${energiaReal}%"></div></div>
+      </div>
+
+      <div style="background:rgba(0,0,0,0.3); padding:6px; border-radius:4px; border:1px solid #2a3f66; margin-top:10px;">
+        <div class="ri">DECISÃO ATUAL DO CÉREBRO:</div>
+        <div style="font-size:10px; font-weight:bold; color:#4ecca3; margin-top:2px;">⚡ ${decisaoTexto}</div>
+      </div>
+    `;
+  }
+
+  // Animação gráfica da Rede Neural do bot
+ // Animação gráfica focada no ciclo de Utility AI e Competição de Escolhas
+  function desenharAnimacaoCerebro(bot) {
+    var canvas = document.getElementById('brain-canvas');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    var brain = (bot && bot._brain) ? bot._brain : { energia: 100, estresse: 0, scoreTrabalhar: 0, scorePausar: 0, scoreSocializar: 0, decisao: 'OCIOSO' };
+    
+    var energ = (bot && bot.energy !== undefined ? bot.energy : parseFloat(brain.energia)) / 100;
+    var estres = (bot && bot.stress !== undefined ? bot.stress : parseFloat(brain.estresse)) / 100;
+    
+    // Converte os scores para números seguros
+    var sTrab = parseFloat(brain.scoreTrabalhar) || 0;
+    var sPausa = parseFloat(brain.scorePausar) || 0;
+    var sSoc = parseFloat(brain.scoreSocializar) || 0;
+    
+    var tempo = Date.now() * 0.003;
+
+    // Nós de Entrada (Sensores Biológicos e de Contexto)
+    var inputs = [
+      { x: 20, y: 22, label: 'ENG', val: energ, cor: '#4ecca3' },
+      { x: 20, y: 45, label: 'STR', val: estres, cor: '#e94560' },
+      { x: 20, y: 68, label: 'QUE', val: 0.6, cor: '#38bdf8' }
+    ];
+
+    // Nós de Decisão (Utility Scores concorrentes)
+    var outputs = [
+      { x: 175, y: 20, label: 'TRAB', score: sTrab, act: brain.decisao === 'TRABALHAR', cor: '#4ecca3' },
+      { x: 175, y: 45, label: 'PAUS', score: sPausa, act: brain.decisao === 'PAUSA' || brain.decisao === 'CAFÉ', cor: '#f0c040' },
+      { x: 175, y: 68, label: 'SOC', score: sSoc, act: brain.decisao === 'CHAT' || brain.decisao === 'SOCIALIZAR', cor: '#a855f7' }
+    ];
+
+    // Desenha as conexões e o fluxo de dados direcionado para a escolha vencedora
+    inputs.forEach(function(inp) {
+      outputs.forEach(function(out) {
+        var isWinnerLink = out.act;
+        
+        // Linhas mais fortes e brilhantes conectam à decisão vencedora
+        ctx.strokeStyle = isWinnerLink ? 'rgba(78, 204, 163, 0.45)' : 'rgba(51, 65, 85, 0.15)';
+        ctx.lineWidth = isWinnerLink ? 1.5 : 0.6;
+        ctx.beginPath();
+        ctx.moveTo(inp.x, inp.y);
+        ctx.lineTo(out.x, out.y);
+        ctx.stroke();
+
+        // Partículas correndo em direção à decisão tomada
+        var velocidadeFluxo = isWinnerLink ? 2.5 : 1.0;
+        var progresso = ((tempo * velocidadeFluxo) % 1);
+        var px = inp.x + (out.x - inp.x) * progresso;
+        var py = inp.y + (out.y - inp.y) * progresso;
+        
+        ctx.fillStyle = isWinnerLink ? out.cor : '#334155';
+        ctx.fillRect(px - 1, py - 1, isWinnerLink ? 2.5 : 1.5, isWinnerLink ? 2.5 : 1.5);
+      });
+    });
+
+    // Renderiza os nós de Entrada (Sensores)
+    inputs.forEach(function(n) {
+      ctx.save();
+      ctx.fillStyle = '#091224';
+      ctx.strokeStyle = n.cor;
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, 4 + (n.val * 3), 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    });
+
+    // Renderiza os nós de Opção (Utility AI Output & Max Selection)
+    outputs.forEach(function(n) {
+      ctx.save();
+      
+      // O tamanho do círculo e o brilho dependem diretamente do score calculado
+      var raioDinamico = Math.max(4, Math.min(10, 4 + (n.score * 2.5)));
+      
+      if (n.act) {
+        // Efeito de destaque para a opção vencedora (Winner-Take-All)
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = n.cor;
+        ctx.strokeStyle = n.cor;
+        ctx.lineWidth = 2.5;
+        ctx.fillStyle = 'rgba(78, 204, 163, 0.2)';
+      } else {
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 1;
+        ctx.fillStyle = '#1e293b';
+      }
+
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, raioDinamico, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Exibe o score numérico sutilmente ao lado do nó para validação visual em tempo real
+      ctx.fillStyle = n.act ? '#ffffff' : '#64748b';
+      ctx.font = '6px monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText(n.score.toFixed(1), n.x - raioDinamico - 3, n.y + 2);
+
+      ctx.restore();
+    });
+  }
+
+  // Loop unificado de renderização
+  setInterval(function() {
+    atualizarPainelCerebro();
+    var bot = BOTS && BOTS.find(function(b){ return b.id === window.botInspecionadoId; });
+    desenharAnimacaoCerebro(bot);
+  }, 100);
+
+  // Tempo de casa simulado
   window.getTempoDeCasaSimulado = function(bot) {
     var diaAtual = (typeof STATE !== 'undefined' && STATE.currentSimDay) ? STATE.currentSimDay : 0;
     var diaEntrada = bot.hireSimDay || 0;
@@ -155,7 +414,7 @@ body{background:#3b5998;overflow:hidden;font-family:"Arial",sans-serif;height:10
     return anos + 'a ' + mesesRestantes + 'm';
   };
 
-  async function dispararComandoJson(botId, botName, macroNome, actionTypeOrState, taskDesc) {
+async function dispararComandoJson(botId, botName, macroNome, actionTypeOrState, taskDesc) {
     var payload = {
         action: (actionTypeOrState === 'active' ? 'run' : (actionTypeOrState || 'run')),
         bot: botId,
@@ -167,15 +426,50 @@ body{background:#3b5998;overflow:hidden;font-family:"Arial",sans-serif;height:10
     };
 
     console.log("-> Disparando payload real:", payload);
+
+    // Função interna para aplicar estresse e frustração
+    function aplicarFrustracao(idDoBot, motivo) {
+        // Busca flexível por ID (id == idDoBot) ou pelo Nome do bot
+        var botRef = BOTS.find(function(b) { 
+            return (idDoBot !== undefined && b.id == idDoBot) || b.name === botName; 
+        });
+
+        if (botRef) {
+            // Soma +15 de estresse
+            botRef.stress = Math.min(100, (botRef.stress || 0) + 15);
+            botRef.state = 'idle'; // Abandona a tarefa quebrada
+            
+            console.log(`⚡ Frustração aplicada em ${botRef.name}! Novo estresse: ${botRef.stress}% (Motivo: ${motivo})`);
+            
+            if (typeof ui !== 'undefined' && ui.showSpeech) {
+                ui.showSpeech(botRef, "Erro de Conexão! 😡");
+            }
+        } else {
+            console.warn("⚠️ Bot não localizado no BOTS[] para aplicar frustração:", idDoBot || botName);
+        }
+    }
+
+    // 1. Se a ação ou estado for 'error', aciona a frustração diretamente
+    if (actionTypeOrState === 'error' || payload.action === 'error') {
+        aplicarFrustracao(botId, "Reporte de erro na tarefa");
+    }
+
     try {
         let resp = await fetch('http://localhost:8080/bot_command.json', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
-        console.log("-> Retorno HTTP:", resp.status);
+
+        if (!resp.ok) {
+            throw new Error("HTTP Status: " + resp.status);
+        }
+
+        console.log("-> Sucesso HTTP:", resp.status);
     } catch (err) {
-        console.error("-> Erro fetch:", err);
+        console.error("-> Falha na conexão HTTP (VBA Offline):", err);
+        // 2. Se a rede ou fetch falhar, aciona a frustração
+        aplicarFrustracao(botId, "Servidor Offline");
     }
   }
 </script>
